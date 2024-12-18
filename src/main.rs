@@ -1,6 +1,6 @@
 #![windows_subsystem = "windows"]
 
-use egui::Color32;
+use egui::{Color32, RichText, Slider};
 use rand::prelude::*;
 use std::fs::{self};
 use walkdir::WalkDir;
@@ -24,21 +24,19 @@ fn main() -> eframe::Result {
 
     eframe::run_simple_native("Random File Mover", options, move |ctx, _frame| {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                ui.label("File count: ");
+            ui.heading("Random File Mover");
 
-                ui.add(
-                    egui::Slider::new(&mut random_file_count, 0..=file_count).trailing_fill(true),
-                );
-                if ui.button(" - ").clicked() && random_file_count > 0 {
-                    random_file_count -= 1;
-                }
-                if ui.button(" + ").clicked() {
-                    random_file_count += 1;
-                }
-            });
+            ui.add_space(15.0);
 
-            // ! file picker
+            // ! first file picker
+            match old_folder.to_owned() {
+                Some(folder_path) => ui.label(
+                    RichText::new(format!("Move from: {}", folder_path))
+                        .color(Color32::from_rgb(255, 255, 255)),
+                ),
+                None => ui.label("No folder selected"),
+            };
+
             if ui.button("Select folder").clicked() {
                 if let Some(path) = rfd::FileDialog::new().pick_folder() {
                     old_folder = Some(path.display().to_string());
@@ -54,10 +52,13 @@ fn main() -> eframe::Result {
 
             file_count = files.len();
 
-            match old_folder.to_owned() {
+            ui.add_space(10.0);
+
+            // ! second file picker
+            match new_folder.to_owned() {
                 Some(folder_path) => ui.label(
-                    egui::RichText::new(format!("Move from: {}", folder_path))
-                        .color(egui::Color32::from_rgb(255, 255, 255)),
+                    RichText::new(format!("Move to: {}", folder_path))
+                        .color(Color32::from_rgb(255, 255, 255)),
                 ),
                 None => ui.label("No folder selected"),
             };
@@ -68,23 +69,29 @@ fn main() -> eframe::Result {
                 }
             }
 
-            match new_folder.to_owned() {
-                Some(folder_path) => ui.label(
-                    egui::RichText::new(format!("Move to: {}", folder_path))
-                        .color(egui::Color32::from_rgb(255, 255, 255)),
-                ),
-                None => ui.label("No folder selected"),
-            };
+            ui.add_space(10.0);
 
-            if old_folder.is_some()
-                && new_folder.is_some()
-                && old_folder.to_owned().unwrap() != new_folder.to_owned().unwrap()
-            {
-                main_program_enabled = true;
-            };
+            // ! file count slider
+            ui.horizontal(|ui| {
+                ui.label("File count: ");
 
+                ui.add(Slider::new(&mut random_file_count, 0..=file_count).trailing_fill(true));
+                if ui.button(" - ").clicked() && random_file_count > 0 {
+                    random_file_count -= 1;
+                }
+                if ui.button(" + ").clicked() {
+                    random_file_count += 1;
+                }
+            });
+
+            ui.add_space(10.0);
+
+            // ! program runner
             ui.add_enabled_ui(main_program_enabled, |ui| {
-                ui.style_mut().visuals.widgets.inactive.weak_bg_fill = Color32::GREEN;
+                ui.style_mut().visuals.widgets.inactive.weak_bg_fill =
+                    Color32::from_hex("#ff8383").unwrap();
+                ui.style_mut().visuals.widgets.hovered.weak_bg_fill =
+                    Color32::from_hex("#f3eed9").unwrap();
                 ui.style_mut().visuals.override_text_color = Some(Color32::BLACK);
 
                 if ui.button("Run Program").clicked() {
@@ -96,6 +103,17 @@ fn main() -> eframe::Result {
                     );
                 }
             });
+
+            if old_folder.is_some() && new_folder.is_some() {
+                if old_folder.to_owned().unwrap() == new_folder.to_owned().unwrap() {
+                    ui.label(
+                        RichText::new("You can't choose the same folder for moving files!")
+                            .color(Color32::RED),
+                    );
+                } else {
+                    main_program_enabled = true;
+                }
+            };
         });
     })
 }
