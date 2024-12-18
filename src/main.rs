@@ -1,5 +1,6 @@
 #![windows_subsystem = "windows"]
 
+use egui::Color32;
 use rand::prelude::*;
 use std::fs::{self};
 use walkdir::WalkDir;
@@ -25,6 +26,7 @@ fn main() -> eframe::Result {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.horizontal(|ui| {
                 ui.label("File count: ");
+
                 ui.add(
                     egui::Slider::new(&mut random_file_count, 0..=file_count).trailing_fill(true),
                 );
@@ -47,13 +49,16 @@ fn main() -> eframe::Result {
                         .into_iter()
                         .filter_map(|f| f.ok()) // filter out errors (silently!)
                         .collect();
-
-                    file_count = files.len();
                 }
             }
 
+            file_count = files.len();
+
             match old_folder.to_owned() {
-                Some(folder_path) => ui.label(format!("Move from: {}", folder_path)),
+                Some(folder_path) => ui.label(
+                    egui::RichText::new(format!("Move from: {}", folder_path))
+                        .color(egui::Color32::from_rgb(255, 255, 255)),
+                ),
                 None => ui.label("No folder selected"),
             };
 
@@ -64,7 +69,10 @@ fn main() -> eframe::Result {
             }
 
             match new_folder.to_owned() {
-                Some(folder_path) => ui.label(format!("Move from: {}", folder_path)),
+                Some(folder_path) => ui.label(
+                    egui::RichText::new(format!("Move to: {}", folder_path))
+                        .color(egui::Color32::from_rgb(255, 255, 255)),
+                ),
                 None => ui.label("No folder selected"),
             };
 
@@ -76,6 +84,9 @@ fn main() -> eframe::Result {
             };
 
             ui.add_enabled_ui(main_program_enabled, |ui| {
+                ui.style_mut().visuals.widgets.inactive.weak_bg_fill = Color32::GREEN;
+                ui.style_mut().visuals.override_text_color = Some(Color32::BLACK);
+
                 if ui.button("Run Program").clicked() {
                     let _ = move_files(
                         &mut files,
@@ -101,10 +112,9 @@ fn move_files(
         let index = rng.gen_range(0..files.len());
         let old_file = &files[index];
         let new_file = format!("{}", old_file.path().display());
-        let new_file = new_file.replace(old_folder, "");
+        let file_name = new_file.replace(old_folder, "");
 
-        fs::copy(old_file.path(), format!("{}{}", new_folder, new_file))?;
-        fs::remove_file(old_file.path())?;
+        fs::rename(old_file.path(), format!("{}{}", new_folder, file_name))?;
         files.remove(index);
     }
 
