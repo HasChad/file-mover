@@ -1,4 +1,4 @@
-// #![windows_subsystem = "windows"]
+#![windows_subsystem = "windows"]
 
 use egui::{Color32, RichText, ScrollArea, Slider};
 use rand::prelude::*;
