@@ -34,7 +34,7 @@ fn main() -> eframe::Result {
                     RichText::new(format!("Move from: {}", folder_path))
                         .color(Color32::from_rgb(255, 255, 255)),
                 ),
-                None => ui.label("No folder selected"),
+                None => ui.label("Move from: No folder selected!"),
             };
 
             if ui.button("Select folder").clicked() {
@@ -60,7 +60,7 @@ fn main() -> eframe::Result {
                     RichText::new(format!("Move to: {}", folder_path))
                         .color(Color32::from_rgb(255, 255, 255)),
                 ),
-                None => ui.label("No folder selected"),
+                None => ui.label("Move to: No folder selected!"),
             };
 
             if ui.button("Select folder").clicked() {
